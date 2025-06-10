@@ -1,0 +1,54 @@
+---
+- name: mysql configuration
+  hosts: db_mysql
+  become: yes
+
+  vars:
+    mysql_root_user: root
+    mysql_root_password: Jodhpur@21
+    mysql_db_name: ansible_db
+    mysql_user: ansible_user
+    mysql_user_password: Jodhpur@21
+  tasks:
+
+    - name: install pymysql
+      apt:
+        name: python3-pymysql
+        state: present
+
+    - name: install mysql
+      apt:
+        name: mysql-server
+        state: present
+        update_cache: yes
+
+    - name: running status of mysql
+      service:
+        name: mysql
+        state: started
+        enabled: yes
+
+    - name: Set MySQL root password using sudo mysql
+      shell: >
+        sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'Jodhpur@21'; FLUSH PRIVILEGES;"
+      become: true
+      args:
+        executable: /bin/bash
+
+
+    - name: create mysql database
+      mysql_db:
+        name: "{{mysql_db_name}}"
+        state: present
+        login_user: "{{mysql_root_user}}"
+        login_password: "{{mysql_root_password}}"
+
+    - name: create mysql user
+      mysql_user:
+        name: "{{mysql_user}}"
+        password: "{{mysql_user_password}}"
+        priv: "{{mysql_db_name}}.*:ALL"
+        state: present
+        host: "%"
+        login_user: "{{mysql_root_user}}"
+        login_password: "{{mysql_root_password}}"
